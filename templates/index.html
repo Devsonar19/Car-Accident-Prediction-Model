@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Accident Risk Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(23, 32, 54, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #38bdf8;
+            --accent-purple: #818cf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --low-risk: #10b981;
+            --med-risk: #f59e0b;
+            --high-risk: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top left, #1e1b4b, #0b0f19, #0f172a);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        /* Two-Side Split Container */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 32px;
+            width: 100%;
+            max-width: 1024px;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--panel-border);
+            border-radius: 28px;
+            padding: 40px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        @media (max-width: 860px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        /* Left Side: Inputs */
+        .panel-left {
+            border-right: 1px solid var(--panel-border);
+            padding-right: 32px;
+        }
+
+        @media (max-width: 860px) {
+            .panel-left {
+                border-right: none;
+                border-bottom: 1px solid var(--panel-border);
+                padding-right: 0;
+                padding-bottom: 32px;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .value-badge {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            outline: none;
+            accent-color: var(--accent-blue);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        input[type="range"]:hover {
+            opacity: 0.9;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.2s ease;
+            appearance: none;
+        }
+        
+        select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+            letter-spacing: 0.5px;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+            box-shadow: 0 15px 25px -10px rgba(99, 102, 241, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* Right Side: Output Dashboard */
+        .panel-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-left: 16px;
+        }
+
+        .result-container {
+            width: 100%;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 40px 20px;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gauge-display {
+            position: relative;
+            margin: 24px 0;
+        }
+
+        .risk-number {
+            font-size: 72px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -2px;
+            color: var(--text-muted);
+            transition: color 0.4s ease;
+        }
+
+        .risk-subtext {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .meter-bg {
+            width: 100%;
+            height: 12px;
+            background: #0f172a;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 24px 0;
+            border: 1px solid var(--panel-border);
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--text-muted);
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
+            border-radius: 6px;
+        }
+
+        .factors-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .factor-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: left;
+            transition: transform 0.2s;
+        }
+        
+        .factor-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .factor-card span {
+            display: block;
+            color: var(--text-main);
+            font-weight: 700;
+            margin-top: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard">
+        <!-- LEFT PANEL: CONTROL INPUTS -->
+        <div class="panel-left">
+            <div class="header">
+                <h2>Real-World Risk AI</h2>
+                <p>Analyze parameters using the UK Road Accidents Model</p>
+            </div>
+
+            <form id="riskForm">
+                
+                <div class="grid-2">
+                    <!-- Age Slider -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="age">Casualty Age</label>
+                            <span class="value-badge" id="ageVal">30</span>
+                        </div>
+                        <input type="range" id="age" min="1" max="100" value="30"
+                            oninput="document.getElementById('ageVal').innerText = this.value">
+                    </div>
+                    
+                    <!-- Time Slider -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="time">Time of Day</label>
+                            <span class="value-badge" id="timeVal">14:00</span>
+                        </div>
+                        <input type="range" id="time" min="0" max="23" value="14"
+                            oninput="document.getElementById('timeVal').innerText = this.value.padStart(2, '0') + ':00'">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="sex">Casualty Sex</label>
+                        <select id="sex">
+                            <option value="1">Male</option>
+                            <option value="2">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vehicle_type">Vehicle Type</label>
+                        <select id="vehicle_type">
+                            <option value="9">Car</option>
+                            <option value="1">Pedal Cycle</option>
+                            <option value="3">Motorcycle < 125cc</option>
+                            <option value="4">Motorcycle > 125cc</option>
+                            <option value="11">Bus / Coach</option>
+                            <option value="19">Van / Light Goods</option>
+                            <option value="20">Heavy Goods Vehicle</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="weather">Weather</label>
+                        <select id="weather">
+                            <option value="1">Fine (No high winds)</option>
+                            <option value="2">Raining</option>
+                            <option value="3">Snowing</option>
+                            <option value="4">Fine + High winds</option>
+                            <option value="5">Raining + High winds</option>
+                            <option value="6">Snowing + High winds</option>
+                            <option value="7">Fog / Mist</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lighting">Lighting</label>
+                        <select id="lighting">
+                            <option value="1">Daylight</option>
+                            <option value="4">Darkness (Lights lit)</option>
+                            <option value="5">Darkness (Unlit)</option>
+                            <option value="7">Darkness (No lighting)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="road_surface">Road Surface</label>
+                        <select id="road_surface">
+                            <option value="1">Dry</option>
+                            <option value="2">Wet / Damp</option>
+                            <option value="3">Snow</option>
+                            <option value="4">Frost / Ice</option>
+                            <option value="5">Flood (over 3cm)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="vehicles">Vehicles Involved</label>
+                            <span class="value-badge" id="vehiclesVal">2</span>
+                        </div>
+                        <input type="range" id="vehicles" min="1" max="10" value="2"
+                            oninput="document.getElementById('vehiclesVal').innerText = this.value">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Analyze Risk Profile</button>
+            </form>
+        </div>
+
+        <!-- RIGHT PANEL: LIVE OUTPUT -->
+        <div class="panel-right">
+            <div class="result-container">
+                <div id="statusPill" class="status-pill">Ready to Predict</div>
+
+                <div class="gauge-display">
+                    <div id="riskNumber" class="risk-number">--%</div>
+                    <div class="risk-subtext">Probability of Serious/Fatal Injury</div>
+                </div>
+
+                <div class="meter-bg">
+                    <div id="meterFill" class="meter-fill"></div>
+                </div>
+
+                <div class="factors-summary">
+                    <div class="factor-card">
+                        Primary Environment Risk
+                        <span id="primaryFactor">--</span>
+                    </div>
+                    <div class="factor-card">
+                        Safety Status
+                        <span id="safetyStatus">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('riskForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Format time appropriately (e.g. 14 -> 1400)
+            const hour = document.getElementById('time').value;
+            const formattedTime = hour * 100;
+
+            const payload = {
+                age: document.getElementById('age').value,
+                time: formattedTime,
+                sex: document.getElementById('sex').value,
+                vehicle_type: document.getElementById('vehicle_type').value,
+                weather: document.getElementById('weather').value,
+                lighting: document.getElementById('lighting').value,
+                road_surface: document.getElementById('road_surface').value,
+                vehicles: document.getElementById('vehicles').value
+            };
+
+            // Loading state
+            const btn = document.querySelector('.btn-submit');
+            btn.innerText = 'Analyzing...';
+            btn.style.opacity = '0.7';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                const prob = data.prob || 0;
+
+                // UI Element Selection
+                const statusPill = document.getElementById('statusPill');
+                const riskNumber = document.getElementById('riskNumber');
+                const meterFill = document.getElementById('meterFill');
+                const primaryFactor = document.getElementById('primaryFactor');
+                const safetyStatus = document.getElementById('safetyStatus');
+
+                // Update basic text
+                riskNumber.innerText = `${prob.toFixed(1)}%`;
+                meterFill.style.width = `${Math.min(prob, 100)}%`;
+
+                // Dynamic State Logic
+                if (prob < 20) {
+                    statusPill.innerText = "Low Risk Scenario";
+                    statusPill.style.color = "var(--low-risk)";
+                    statusPill.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                    statusPill.style.background = "rgba(16, 185, 129, 0.05)";
+                    riskNumber.style.color = "var(--low-risk)";
+                    meterFill.style.backgroundColor = "var(--low-risk)";
+                    safetyStatus.innerText = "Nominal Conditions";
+                } else if (prob < 50) {
+                    statusPill.innerText = "Moderate Hazard";
+                    statusPill.style.color = "var(--med-risk)";
+                    statusPill.style.borderColor = "rgba(245, 158, 11, 0.3)";
+                    statusPill.style.background = "rgba(245, 158, 11, 0.05)";
+                    riskNumber.style.color = "var(--med-risk)";
+                    meterFill.style.backgroundColor = "var(--med-risk)";
+                    safetyStatus.innerText = "Caution Advised";
+                } else {
+                    statusPill.innerText = "Critical Risk Level";
+                    statusPill.style.color = "var(--high-risk)";
+                    statusPill.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                    statusPill.style.background = "rgba(239, 68, 68, 0.05)";
+                    riskNumber.style.color = "var(--high-risk)";
+                    meterFill.style.backgroundColor = "var(--high-risk)";
+                    safetyStatus.innerText = "High Fatality Threat";
+                }
+
+                // Simple Primary Factor heuristic display based on UK metrics
+                if (payload.road_surface >= 3) {
+                    primaryFactor.innerText = "Slippery/Icy Road";
+                } else if (payload.lighting >= 5) {
+                    primaryFactor.innerText = "Poor Visibility";
+                } else if (payload.vehicle_type == 1 || payload.vehicle_type == 3) {
+                    primaryFactor.innerText = "Vulnerable Vehicle";
+                } else if (payload.weather >= 4 && payload.weather != 7) {
+                    primaryFactor.innerText = "High Winds";
+                } else if (payload.weather == 7) {
+                    primaryFactor.innerText = "Fog / Mist";
+                } else {
+                    primaryFactor.innerText = "General Traffic";
+                }
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred during prediction.");
+            } finally {
+                btn.innerText = 'Analyze Risk Profile';
+                btn.style.opacity = '1';
+            }
+        });
+    </script>
+</body>
+</html>
